@@ -1,0 +1,170 @@
+<html>
+<head>
+    <title>Тестовое задание для Front-end</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/css/bootstrap.min.css"
+          integrity="sha384-Zug+QiDoJOrZ5t4lssLdxGhVrurbmBWopoEl+M6BdEfwnCJZtKxi1KgxUyJq13dy" crossorigin="anonymous">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet"/>
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+
+</head>
+<body onload="initialize()">
+<div class="container">
+    <div class="row">
+        <h1>Тестовое заданиае </h1>
+
+        <div class="task col-sm-12">
+            <ul>
+                <li> Создать HTML5 страницу использую bootstrap.</li>
+                <li> Построить форму с зависимыми select (регион - город) используя данные из json представления.</li>
+                <li>При изменении региона, устанавливать в зависимый select города этого региона (все необходимые данные
+                    ниже).
+                </li>
+                <li> При построении select стилизировать используя select2 plugin.</li>
+                <li>С использованием шаблонизатора TWIG создать многомерный массив вида - [код области => [код города =>
+                    название города]]; - можно для одной области, например Киевской; Используя цикл в TWIG вывести все
+                    кода городов и их названия в виде ненумерованного списка.
+                </li>
+            </ul>
+            <hr>
+        </div>
+
+        <h2 class="mt-1">Реализация задания</h2>
+        <div class="form col-sm-12">
+            <form>
+                <div class="form-group">
+                    <label for="regions">Выберите регион</label>
+
+                    <select id="regions" name="region">
+
+                        {% for key, item in arobl %}
+                            {% for key2, item2 in item %}
+                                {% if key2 == 15 %}
+                                    <option selected="selected" value="{{ key2 }}">{{ item2 }}</option>
+                                {% else %}
+                                    <option value="{{ key2 }}">{{ item2 }}</option>
+                                {% endif %}
+
+                            {% endfor %}
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="city">Выберите город</label>
+                    <select id="city" name="city">
+                        {% for key, item in cities_kiev %}
+                            {% for key2, item2 in item %}
+                                <option value="{{ key2 }}">{{ item2 }}</option>
+                            {% endfor %}
+                        {% endfor %}
+                    </select>
+                </div>
+            </form>
+            <hr>
+        </div>
+
+        <div class="results col-sm-12 mt-2">
+            <div class="row">
+                <div class="col-sm-6">
+
+                    <table class="table table-bordered table-striped">
+                        <th>Код</th>
+                        <th>Область</th>
+                        <th>Город</th>
+                        {% for key, item in arobl %}
+                            <tr>
+                            {% for key2, item2 in item %}
+                                <td>{{ key2 }}</td>
+                                <td><a href="javascript:void(0)">{{ item2 }}</a></td>
+                                <td></td>
+                                <tr>
+                                {% for keyct, itemct in cities[key2] %}
+                                    <tr>
+                                    {% for key2ct, item2ct in itemct %}
+                                        <td>{{ key2ct }}</td>
+                                        <td></td>
+                                        <td><a href="javascript:void(0)">{{ item2ct }}</a></td>
+                                    {% endfor %}</tr>
+                                {% endfor %}
+                                </tr>
+                            {% endfor %}
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+                <div class="col-sm-6">
+                   <div class="sticky-top"><div id="map"  data-spy="affix" style="width:100%; height: 480px; background-color:#ccc;" ></div></div>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+</div>
+<script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC4dMaOHHVHIek_UbJtF7UKtRKoa7vIvUM">
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/js/bootstrap.min.js"
+        integrity="sha384-a5N7Y/aK3qNeh15eJKGWxsqtnX/wWdSZSKp+81YjTmS15nvnvxKHuzaWwXHDli+4"
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js/select2.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $('.form select').select2();
+
+        $(document).on("change", ".form #regions", function () {
+            var id_ob = $(this).val();
+            $.getJSON('data.json', function (data) {
+                // console.log(data[id_ob]);
+                $("#city option").remove();
+
+                for (var i = 0; i < data[id_ob].length; i++) {
+                    for (var key in data[id_ob][i]) {
+
+                        $("#city").append("<option value=" + key + ">" + data[id_ob][i][key] + "</option>");
+                        console.log(key, data[id_ob][i][key]);
+                    }
+
+                }
+                $("#city").select2();
+            });
+        });
+    });
+
+    // Google MAP
+    var geocoder;
+    var map;
+    function initialize() {
+        geocoder = new google.maps.Geocoder();
+        var latlng = new google.maps.LatLng(50.401699, 30.252512);
+        var mapOptions = {
+            zoom: 8,
+            center: latlng
+        }
+        map = new google.maps.Map(document.getElementById('map'), mapOptions);
+        $(document).on("click","table a", function(){
+            address = $(this).text();
+            codeAddress(address);
+        });
+    }
+
+    function codeAddress(address) {
+        var address = address;
+
+        geocoder.geocode( { 'address': address}, function(results, status) {
+            if (status == 'OK') {
+                map.setCenter(results[0].geometry.location);
+                var marker = new google.maps.Marker({
+                    map: map,
+                    position: results[0].geometry.location
+                });
+            } else {
+                alert('Geocode was not successful for the following reason: ' + status);
+            }
+        });
+    }
+</script>
+</body>
+</html>
